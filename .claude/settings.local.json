@@ -1,0 +1,29 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npx create-next-app@latest . --typescript --tailwind --eslint --app --src-dir --no-git --import-alias \"@/*\")",
+      "Bash(npx create-next-app@latest . --typescript --tailwind --eslint --app --src-dir --no-git --import-alias \"@/*\" --yes)",
+      "Bash(npx create-next-app@latest . --typescript --tailwind --eslint --app --src-dir --no-git --import-alias \"@/*\" --project-name kixu)",
+      "Read(//c/Users/dangb/**)",
+      "Bash(npx create-next-app@latest kixu-tmp --typescript --tailwind --eslint --app --src-dir --no-git --import-alias \"@/*\" --yes)",
+      "Bash(cp -r /c/Users/dangb/kixu-tmp/. /c/Users/dangb/Kixu/)",
+      "Bash(rm -rf /c/Users/dangb/kixu-tmp)",
+      "Bash(robocopy \"C:\\\\Users\\\\dangb\\\\kixu-tmp\" \"C:\\\\Users\\\\dangb\\\\Kixu\" /E /XD node_modules .git /NFL /NDL)",
+      "Bash(cp /c/Users/dangb/kixu-tmp/package.json /c/Users/dangb/Kixu/)",
+      "Bash(cp /c/Users/dangb/kixu-tmp/tsconfig.json /c/Users/dangb/Kixu/)",
+      "Bash(cp /c/Users/dangb/kixu-tmp/next.config.ts /c/Users/dangb/Kixu/)",
+      "Bash(cp /c/Users/dangb/kixu-tmp/eslint.config.mjs /c/Users/dangb/Kixu/)",
+      "Bash(cp /c/Users/dangb/kixu-tmp/postcss.config.mjs /c/Users/dangb/Kixu/)",
+      "Bash(npx shadcn@latest init --yes --defaults)",
+      "Bash(npm install:*)",
+      "Bash(git init:*)",
+      "Bash(git add:*)",
+      "Bash(git reset:*)",
+      "Bash(git commit:*)",
+      "Bash(git remote:*)",
+      "Bash(git push:*)",
+      "Bash(git rm:*)",
+      "Bash(git checkout:*)"
+    ]
+  }
+}
