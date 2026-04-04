@@ -93,7 +93,7 @@ export default function NewCommunityPage() {
       role: 'admin',
     })
 
-    router.push(`/app/community/${community.slug}`)
+    router.push(`/community/${community.slug}`)
     router.refresh()
   }
 

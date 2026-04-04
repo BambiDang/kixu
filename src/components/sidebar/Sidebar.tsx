@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { useCommunityStore } from '@/store/useCommunityStore'
 import { useUserStore } from '@/store/useUserStore'
@@ -14,10 +14,17 @@ type Community = Database['public']['Tables']['communities']['Row']
 export default function Sidebar({ userId }: { userId: string }) {
   const supabase = createClient()
   const pathname = usePathname()
+  const router = useRouter()
   const { communities, setCommunities } = useCommunityStore()
-  const { setUser } = useUserStore()
+  const { user, setUser } = useUserStore()
   const { communityUnread } = useUnreadStore()
   const [mobileOpen, setMobileOpen] = useState(false)
+
+  async function handleLogout() {
+    await supabase.auth.signOut()
+    router.push('/login')
+    router.refresh()
+  }
 
   useEffect(() => {
     async function load() {
@@ -49,7 +56,7 @@ export default function Sidebar({ userId }: { userId: string }) {
     load()
   }, [userId])
 
-  const currentSlug = pathname.match(/\/app\/community\/([^/]+)/)?.[1]
+  const currentSlug = pathname.match(/\/community\/([^/]+)/)?.[1]
 
   return (
     <>
@@ -108,7 +115,7 @@ export default function Sidebar({ userId }: { userId: string }) {
         {/* Bottom actions */}
         <div className="border-t border-gray-100 p-3 space-y-1">
           <Link
-            href="/app/community/new"
+            href="/community/new"
             className="flex items-center gap-2 px-3 py-2 text-sm text-gray-600 rounded-md hover:bg-gray-50 transition-colors"
             onClick={() => setMobileOpen(false)}
           >
@@ -122,6 +129,34 @@ export default function Sidebar({ userId }: { userId: string }) {
           >
             Browse marketplace
           </Link>
+          <Link
+            href="/bookings"
+            className="flex items-center gap-2 px-3 py-2 text-sm text-gray-600 rounded-md hover:bg-gray-50 transition-colors"
+            onClick={() => setMobileOpen(false)}
+          >
+            Bookings
+          </Link>
+        </div>
+
+        {/* User profile + logout */}
+        <div className="border-t border-gray-100 p-3">
+          {user && (
+            <div className="flex items-center gap-2 px-2 py-1 mb-1">
+              <div className="w-7 h-7 rounded-full bg-blue-100 text-blue-700 text-xs flex items-center justify-center font-medium flex-shrink-0">
+                {user.display_name?.[0]?.toUpperCase() ?? '?'}
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-xs font-medium text-gray-800 truncate">{user.display_name}</p>
+                {user.username && <p className="text-xs text-gray-400 truncate">@{user.username}</p>}
+              </div>
+            </div>
+          )}
+          <button
+            onClick={handleLogout}
+            className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-500 rounded-md hover:bg-gray-50 hover:text-gray-700 transition-colors"
+          >
+            Sign out
+          </button>
         </div>
       </aside>
     </>
@@ -143,7 +178,7 @@ function CommunityRow({
 
   return (
     <Link
-      href={`/app/community/${community.slug}`}
+      href={`/community/${community.slug}`}
       onClick={onNavigate}
       className={`
         flex items-center gap-2 mx-2 px-2 py-2 rounded-md text-sm transition-colors

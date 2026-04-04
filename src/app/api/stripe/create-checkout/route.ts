@@ -38,7 +38,7 @@ export async function POST(request: NextRequest) {
       application_fee_percent: PLATFORM_FEE_PERCENT,
       metadata: { community_id: communityId, user_id: user.id },
     },
-    success_url: `${origin}/app/community/${community.slug}?checkout=success`,
+    success_url: `${origin}/community/${community.slug}?checkout=success`,
     cancel_url: `${origin}/${community.slug}`,
     metadata: { community_id: communityId, user_id: user.id },
   }, {

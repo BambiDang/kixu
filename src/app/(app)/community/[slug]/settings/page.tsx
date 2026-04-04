@@ -23,7 +23,7 @@ export default async function CommunitySettingsPage({ params }: { params: Promis
     .eq('user_id', user.id)
     .single()
 
-  if (!membership) redirect(`/app/community/${slug}`)
+  if (!membership) redirect(`/community/${slug}`)
 
   const isAdmin = membership.role === 'admin'
 
@@ -36,7 +36,7 @@ export default async function CommunitySettingsPage({ params }: { params: Promis
   return (
     <div className="max-w-2xl mx-auto px-4 py-8">
       <div className="flex items-center gap-3 mb-6">
-        <a href={`/app/community/${slug}`} className="text-gray-400 hover:text-gray-600">←</a>
+        <a href={`/community/${slug}`} className="text-gray-400 hover:text-gray-600">←</a>
         <h1 className="text-xl font-bold text-gray-900">{community.name} — Settings</h1>
       </div>
 
@@ -94,7 +94,7 @@ export default async function CommunitySettingsPage({ params }: { params: Promis
             <p className="text-gray-600">{community.description ?? 'No description.'}</p>
           </div>
           <a
-            href={`/app/community/${slug}`}
+            href={`/community/${slug}`}
             className="block text-center py-2 px-4 border border-red-200 text-red-600 rounded-lg text-sm hover:bg-red-50 transition-colors"
           >
             Leave community

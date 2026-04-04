@@ -15,6 +15,21 @@ export default async function MarketplacePage({ searchParams }: PageProps) {
   const { languages: languagesParam } = await searchParams
   const selectedLanguages = languagesParam ? languagesParam.split(',').filter(Boolean) : []
 
+  // Show placeholder if Supabase is not yet configured
+  if (!process.env.NEXT_PUBLIC_SUPABASE_URL) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center max-w-md px-4">
+          <h1 className="text-2xl font-bold text-gray-900 mb-2">Kixu Marketplace</h1>
+          <p className="text-gray-500 text-sm mb-4">
+            To see live communities, add your Supabase credentials to <code className="bg-gray-100 px-1 rounded">.env.local</code>.
+          </p>
+          <a href="/login" className="text-blue-600 text-sm hover:underline">Go to login →</a>
+        </div>
+      </div>
+    )
+  }
+
   const supabase = await createClient()
 
   // Fetch all communities with member counts

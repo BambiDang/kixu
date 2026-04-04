@@ -27,7 +27,7 @@ export default async function BookingsPage() {
       {!profile?.stripe_account_active && (
         <div className="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg text-sm text-yellow-800">
           Connect Stripe to start accepting bookings.{' '}
-          <a href="/app/dashboard" className="underline">Go to dashboard</a>
+          <a href="/dashboard" className="underline">Go to dashboard</a>
         </div>
       )}
 

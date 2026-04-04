@@ -46,7 +46,7 @@ export default async function PublicLandingPage({ params }: PageProps) {
       .eq('community_id', community.id)
       .eq('user_id', user.id)
       .maybeSingle()
-    if (membership) redirect(`/app/community/${slug}`)
+    if (membership) redirect(`/community/${slug}`)
   }
 
   const { count: memberCount } = await supabase

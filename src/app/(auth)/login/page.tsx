@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button'
 export default function LoginPage() {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const returnTo = searchParams.get('returnTo') || '/app/dashboard'
+  const returnTo = searchParams.get('returnTo') || '/dashboard'
 
   const [mode, setMode] = useState<'login' | 'signup'>('login')
   const [email, setEmail] = useState('')

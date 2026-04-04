@@ -49,8 +49,8 @@ export async function POST(request: NextRequest) {
       application_fee_amount: platformFee,
       metadata: { slot_id: slotId, user_id: user.id, platform_fee: String(platformFee) },
     },
-    success_url: `${origin}/app/community/${community?.slug ?? ''}?booking=success`,
-    cancel_url: `${origin}/app/community/${community?.slug ?? ''}`,
+    success_url: `${origin}/community/${community?.slug ?? ''}?booking=success`,
+    cancel_url: `${origin}/community/${community?.slug ?? ''}`,
     metadata: { slot_id: slotId, user_id: user.id, platform_fee: String(platformFee) },
   }, {
     stripeAccount: creator.stripe_account_id,

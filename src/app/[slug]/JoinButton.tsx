@@ -32,7 +32,7 @@ export default function JoinButton({ communityId, slug, priceLabel, isFree }: Pr
         user_id: user.id,
         role: 'member',
       })
-      router.push(`/app/community/${slug}`)
+      router.push(`/community/${slug}`)
       return
     }
 

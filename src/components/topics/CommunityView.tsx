@@ -196,7 +196,7 @@ export default function CommunityView({ community, userId, userRole, canPin }: P
         </div>
         {userRole === 'admin' && (
           <a
-            href={`/app/community/${community.slug}/settings`}
+            href={`/community/${community.slug}/settings`}
             className="text-gray-400 hover:text-gray-600 transition-colors"
             aria-label="Settings"
           >
