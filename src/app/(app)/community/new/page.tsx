@@ -87,11 +87,17 @@ export default function NewCommunityPage() {
     }
 
     // Add creator as admin
-    await supabase.from('community_members').insert({
+    const { error: memberError } = await supabase.from('community_members').insert({
       community_id: community.id,
       user_id: user.id,
       role: 'admin',
     })
+
+    if (memberError) {
+      setError(`Community created but failed to add you as admin: ${memberError.message}`)
+      setSubmitting(false)
+      return
+    }
 
     router.push(`/community/${community.slug}`)
     router.refresh()

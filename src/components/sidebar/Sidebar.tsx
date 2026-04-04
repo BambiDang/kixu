@@ -90,7 +90,9 @@ export default function Sidebar({ userId }: { userId: string }) {
       >
         {/* Logo */}
         <div className="px-4 py-4 border-b border-gray-100">
-          <span className="font-bold text-gray-900 text-base">Kixu</span>
+          <Link href="/dashboard" className="font-bold text-gray-900 text-base hover:text-gray-700 transition-colors">
+            Kixu
+          </Link>
         </div>
 
         {/* Community list */}
@@ -119,19 +121,23 @@ export default function Sidebar({ userId }: { userId: string }) {
             className="flex items-center gap-2 px-3 py-2 text-sm text-gray-600 rounded-md hover:bg-gray-50 transition-colors"
             onClick={() => setMobileOpen(false)}
           >
-            <span className="text-lg leading-none">+</span>
-            Create community
+            <span className="text-base leading-none">+</span>
+            New community
           </Link>
           <Link
             href="/marketplace"
-            className="flex items-center gap-2 px-3 py-2 text-sm text-gray-600 rounded-md hover:bg-gray-50 transition-colors"
+            className={`flex items-center gap-2 px-3 py-2 text-sm rounded-md transition-colors ${
+              pathname === '/marketplace' ? 'bg-gray-100 text-gray-900 font-medium' : 'text-gray-600 hover:bg-gray-50'
+            }`}
             onClick={() => setMobileOpen(false)}
           >
-            Browse marketplace
+            Marketplace
           </Link>
           <Link
             href="/bookings"
-            className="flex items-center gap-2 px-3 py-2 text-sm text-gray-600 rounded-md hover:bg-gray-50 transition-colors"
+            className={`flex items-center gap-2 px-3 py-2 text-sm rounded-md transition-colors ${
+              pathname === '/bookings' ? 'bg-gray-100 text-gray-900 font-medium' : 'text-gray-600 hover:bg-gray-50'
+            }`}
             onClick={() => setMobileOpen(false)}
           >
             Bookings

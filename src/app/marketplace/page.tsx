@@ -31,6 +31,7 @@ export default async function MarketplacePage({ searchParams }: PageProps) {
   }
 
   const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
 
   // Fetch all communities with member counts
   const { data: communities } = await supabase
@@ -73,8 +74,14 @@ export default async function MarketplacePage({ searchParams }: PageProps) {
     <div className="min-h-screen bg-gray-50">
       <header className="bg-white border-b border-gray-200 px-4 py-4">
         <div className="max-w-5xl mx-auto flex items-center justify-between">
-          <a href="/" className="font-bold text-gray-900 text-lg">Kixu</a>
-          <a href="/login" className="text-sm text-gray-500 hover:text-gray-900 transition-colors">Sign in</a>
+          <a href="/marketplace" className="font-bold text-gray-900 text-lg">Kixu</a>
+          {user ? (
+            <a href="/dashboard" className="text-sm text-gray-600 hover:text-gray-900 transition-colors">
+              Go to app →
+            </a>
+          ) : (
+            <a href="/login" className="text-sm text-gray-500 hover:text-gray-900 transition-colors">Sign in</a>
+          )}
         </div>
       </header>
 

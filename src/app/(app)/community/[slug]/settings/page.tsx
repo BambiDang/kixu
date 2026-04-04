@@ -1,5 +1,9 @@
 import { createClient } from '@/lib/supabase/server'
 import { notFound, redirect } from 'next/navigation'
+import SettingsEditor from './SettingsEditor'
+import SessionTypeManager from './SessionTypeManager'
+import MemberManager from './MemberManager'
+import CohortManager from './CohortManager'
 
 export default async function CommunitySettingsPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params
@@ -24,8 +28,7 @@ export default async function CommunitySettingsPage({ params }: { params: Promis
     .single()
 
   if (!membership) redirect(`/community/${slug}`)
-
-  const isAdmin = membership.role === 'admin'
+  if (membership.role !== 'admin') redirect(`/community/${slug}`)
 
   const { data: members } = await supabase
     .from('community_members')
@@ -33,74 +36,34 @@ export default async function CommunitySettingsPage({ params }: { params: Promis
     .eq('community_id', community.id)
     .order('joined_at', { ascending: true })
 
+  const { data: sessionTypes } = await supabase
+    .from('session_types')
+    .select('*, slots(id, start_time, status, booked_count)')
+    .eq('community_id', community.id)
+    .order('created_at', { ascending: false })
+
+  const { data: alumni } = await supabase
+    .from('cohort_alumni')
+    .select('*')
+    .eq('community_id', community.id)
+    .order('cohort_name', { ascending: true })
+
   return (
-    <div className="max-w-2xl mx-auto px-4 py-8">
-      <div className="flex items-center gap-3 mb-6">
-        <a href={`/community/${slug}`} className="text-gray-400 hover:text-gray-600">←</a>
-        <h1 className="text-xl font-bold text-gray-900">{community.name} — Settings</h1>
+    <div className="max-w-2xl mx-auto px-4 py-8 space-y-8">
+      {/* Header */}
+      <div className="flex items-center gap-3">
+        <a href={`/community/${slug}`} className="text-gray-400 hover:text-gray-600 text-lg leading-none">←</a>
+        <div>
+          <h1 className="text-xl font-bold text-gray-900">{community.name}</h1>
+          <p className="text-xs text-gray-400 mt-0.5">Community Settings</p>
+        </div>
       </div>
 
-      {isAdmin ? (
-        <div className="space-y-8">
-          {/* General info */}
-          <section className="border border-gray-200 rounded-lg p-5 space-y-2">
-            <h2 className="font-semibold text-gray-800 mb-3">General</h2>
-            <div className="grid grid-cols-2 gap-y-2 text-sm">
-              <span className="text-gray-500">Name</span>
-              <span className="text-gray-800">{community.name}</span>
-              <span className="text-gray-500">Slug</span>
-              <span className="text-gray-800">{community.slug}</span>
-              <span className="text-gray-500">Category</span>
-              <span className="text-gray-800">{community.category ?? '—'}</span>
-              <span className="text-gray-500">Price</span>
-              <span className="text-gray-800">
-                {community.price_monthly === 0 ? 'Free' : `$${(community.price_monthly / 100).toFixed(0)}/mo`}
-              </span>
-            </div>
-            <p className="text-xs text-gray-400 mt-3">
-              Full editing UI coming soon. Contact support to update settings.
-            </p>
-          </section>
-
-          {/* Members */}
-          <section className="border border-gray-200 rounded-lg p-5">
-            <h2 className="font-semibold text-gray-800 mb-3">Members</h2>
-            <div className="space-y-2">
-              {(members ?? []).map((m) => {
-                const u = Array.isArray(m.users) ? m.users[0] : m.users
-                return (
-                  <div key={m.user_id} className="flex items-center justify-between py-2 border-t border-gray-100 first:border-0 text-sm">
-                    <div>
-                      <span className="font-medium text-gray-800">{u?.display_name ?? '—'}</span>
-                      {u?.username && <span className="text-gray-400 ml-1 text-xs">@{u.username}</span>}
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span className={`text-xs px-2 py-0.5 rounded-full ${
-                        m.role === 'admin' ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-600'
-                      }`}>
-                        {m.role}
-                      </span>
-                    </div>
-                  </div>
-                )
-              })}
-            </div>
-          </section>
-        </div>
-      ) : (
-        <div className="space-y-4">
-          <div className="border border-gray-200 rounded-lg p-5 text-sm">
-            <h2 className="font-semibold text-gray-800 mb-2">Community info</h2>
-            <p className="text-gray-600">{community.description ?? 'No description.'}</p>
-          </div>
-          <a
-            href={`/community/${slug}`}
-            className="block text-center py-2 px-4 border border-red-200 text-red-600 rounded-lg text-sm hover:bg-red-50 transition-colors"
-          >
-            Leave community
-          </a>
-        </div>
-      )}
+      {/* Tab sections */}
+      <SettingsEditor community={community} />
+      <SessionTypeManager community={community} sessionTypes={sessionTypes ?? []} userId={user.id} />
+      <MemberManager communityId={community.id} members={members ?? []} currentUserId={user.id} />
+      <CohortManager communityId={community.id} alumni={alumni ?? []} />
     </div>
   )
 }

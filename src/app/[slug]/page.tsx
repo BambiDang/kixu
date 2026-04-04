@@ -31,11 +31,18 @@ export default async function PublicLandingPage({ params }: PageProps) {
 
   const { data: community } = await supabase
     .from('communities')
-    .select('*, users(display_name, avatar_url, username)')
+    .select('*')
     .eq('slug', slug)
     .single()
 
   if (!community) notFound()
+
+  // Fetch creator info separately to avoid RLS join issues on users table
+  const { data: creatorRow } = await supabase
+    .from('users')
+    .select('display_name, avatar_url, username')
+    .eq('id', community.created_by)
+    .maybeSingle()
 
   // If logged-in member, redirect to app
   const { data: { user } } = await supabase.auth.getUser()
@@ -68,7 +75,7 @@ export default async function PublicLandingPage({ params }: PageProps) {
     .order('start_time', { ascending: true })
     .limit(5)
 
-  const creator = Array.isArray(community.users) ? community.users[0] : community.users
+  const creator = creatorRow
   const languages = (community.languages as Language[] | null) ?? []
   const testimonials = (community.lp_testimonials as Testimonial[] | null) ?? []
   const whatYouGet = (community.lp_what_youll_get as string[] | null) ?? []
@@ -79,6 +86,23 @@ export default async function PublicLandingPage({ params }: PageProps) {
 
   return (
     <div className="min-h-screen bg-white">
+      {/* Top nav */}
+      <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
+        <a href="/marketplace" className="text-sm text-gray-500 hover:text-gray-800 transition-colors">
+          ← Marketplace
+        </a>
+        {!user && (
+          <a href="/login" className="text-sm text-gray-500 hover:text-gray-900 transition-colors">
+            Sign in
+          </a>
+        )}
+        {user && (
+          <a href="/dashboard" className="text-sm text-gray-600 hover:text-gray-900 transition-colors">
+            Go to app →
+          </a>
+        )}
+      </div>
+
       {/* Hero */}
       <div className="relative h-56 bg-gradient-to-br from-blue-600 to-blue-400">
         {community.cover_image_url && (
