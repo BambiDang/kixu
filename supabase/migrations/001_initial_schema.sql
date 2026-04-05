@@ -185,7 +185,7 @@ ALTER TABLE public.bookings ENABLE ROW LEVEL SECURITY;
 -- -------------------------------------------------------
 
 -- users
-CREATE POLICY "users_select_own" ON public.users FOR SELECT USING (auth.uid() = id);
+CREATE POLICY "users_select_public" ON public.users FOR SELECT USING (true);
 CREATE POLICY "users_update_own" ON public.users FOR UPDATE USING (auth.uid() = id);
 
 -- communities

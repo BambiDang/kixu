@@ -1,9 +1,10 @@
-import { createClient } from '@/lib/supabase/server'
+import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { notFound, redirect } from 'next/navigation'
 import SettingsEditor from './SettingsEditor'
 import SessionTypeManager from './SessionTypeManager'
 import MemberManager from './MemberManager'
 import CohortManager from './CohortManager'
+import ChannelManager from './ChannelManager'
 
 export default async function CommunitySettingsPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params
@@ -30,7 +31,10 @@ export default async function CommunitySettingsPage({ params }: { params: Promis
   if (!membership) redirect(`/community/${slug}`)
   if (membership.role !== 'admin') redirect(`/community/${slug}`)
 
-  const { data: members } = await supabase
+  // Use service client for admin-scoped queries that need to bypass RLS
+  const serviceSupabase = await createServiceClient()
+
+  const { data: members } = await serviceSupabase
     .from('community_members')
     .select('user_id, role, can_pin, joined_at, users(display_name, username, avatar_url)')
     .eq('community_id', community.id)
@@ -38,7 +42,7 @@ export default async function CommunitySettingsPage({ params }: { params: Promis
 
   const { data: sessionTypes } = await supabase
     .from('session_types')
-    .select('*, slots(id, start_time, status, booked_count)')
+    .select('*, slots(*)')
     .eq('community_id', community.id)
     .order('created_at', { ascending: false })
 
@@ -47,6 +51,11 @@ export default async function CommunitySettingsPage({ params }: { params: Promis
     .select('*')
     .eq('community_id', community.id)
     .order('cohort_name', { ascending: true })
+
+  const [{ data: channelSections }, { data: channels }] = await Promise.all([
+    serviceSupabase.from('channel_sections').select('*').eq('community_id', community.id).order('position'),
+    serviceSupabase.from('channels').select('*').eq('community_id', community.id).order('position'),
+  ])
 
   return (
     <div className="max-w-2xl mx-auto px-4 py-8 space-y-8">
@@ -64,6 +73,11 @@ export default async function CommunitySettingsPage({ params }: { params: Promis
       <SessionTypeManager community={community} sessionTypes={sessionTypes ?? []} userId={user.id} />
       <MemberManager communityId={community.id} members={members ?? []} currentUserId={user.id} />
       <CohortManager communityId={community.id} alumni={alumni ?? []} />
+      <ChannelManager
+        communityId={community.id}
+        sections={channelSections ?? []}
+        channels={channels ?? []}
+      />
     </div>
   )
 }

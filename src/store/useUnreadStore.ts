@@ -7,6 +7,8 @@ interface UnreadStore {
   followedTopicIds: Set<string>
   /** Map of community_id → boolean: has any unread topic */
   communityUnread: Record<string, boolean>
+  /** Map of topic_id → channel_id (null = unsectioned / no channel) — used for sidebar unread dots */
+  topicChannelMap: Record<string, string | null>
 
   setUnreadTopics: (topicIds: string[]) => void
   markTopicRead: (topicId: string) => void
@@ -16,12 +18,15 @@ interface UnreadStore {
   toggleFollow: (topicId: string) => void
 
   setCommunityUnread: (communityId: string, hasUnread: boolean) => void
+  setTopicChannelMap: (map: Record<string, string | null>) => void
+  addTopicToChannelMap: (topicId: string, channelId: string | null) => void
 }
 
 export const useUnreadStore = create<UnreadStore>((set) => ({
   unreadTopicIds: new Set(),
   followedTopicIds: new Set(),
   communityUnread: {},
+  topicChannelMap: {},
 
   setUnreadTopics: (topicIds) =>
     set({ unreadTopicIds: new Set(topicIds) }),
@@ -60,5 +65,12 @@ export const useUnreadStore = create<UnreadStore>((set) => ({
   setCommunityUnread: (communityId, hasUnread) =>
     set((state) => ({
       communityUnread: { ...state.communityUnread, [communityId]: hasUnread },
+    })),
+
+  setTopicChannelMap: (map) => set({ topicChannelMap: map }),
+
+  addTopicToChannelMap: (topicId, channelId) =>
+    set((state) => ({
+      topicChannelMap: { ...state.topicChannelMap, [topicId]: channelId },
     })),
 }))

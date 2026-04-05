@@ -14,9 +14,11 @@ interface ReactionCount {
 interface Props {
   messageId: string
   userId: string
+  /** When true, hides the "+" add-reaction button (parent provides its own trigger) */
+  hideAddButton?: boolean
 }
 
-export default function ReactionBar({ messageId, userId }: Props) {
+export default function ReactionBar({ messageId, userId, hideAddButton = false }: Props) {
   const supabase = createClient()
   const [reactions, setReactions] = useState<ReactionCount[]>([])
   const [pickerOpen, setPickerOpen] = useState(false)
@@ -87,12 +89,14 @@ export default function ReactionBar({ messageId, userId }: Props) {
         </button>
       ))}
 
-      <button
-        onClick={() => setPickerOpen(!pickerOpen)}
-        className="px-1.5 py-0.5 text-xs text-gray-400 hover:text-gray-600 border border-transparent hover:border-gray-200 rounded-full transition-colors"
-      >
-        +
-      </button>
+      {!hideAddButton && (
+        <button
+          onClick={() => setPickerOpen(!pickerOpen)}
+          className="px-1.5 py-0.5 text-xs text-gray-400 hover:text-gray-600 border border-transparent hover:border-gray-200 rounded-full transition-colors"
+        >
+          +
+        </button>
+      )}
 
       {pickerOpen && (
         <>

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import type { Database } from '@/types/database'
@@ -17,7 +17,10 @@ interface Props {
 }
 
 export default function SessionTypeManager({ community, sessionTypes, userId }: Props) {
-  const supabase = createClient()
+  // useRef prevents createClient() from being called on every render (React Strict Mode
+  // double-invokes components, which would cause duplicate Supabase auth refresh calls)
+  const supabaseRef = useRef(createClient())
+  const supabase = supabaseRef.current
   const router = useRouter()
   const [showForm, setShowForm] = useState(false)
   const [showSlotForm, setShowSlotForm] = useState<string | null>(null)

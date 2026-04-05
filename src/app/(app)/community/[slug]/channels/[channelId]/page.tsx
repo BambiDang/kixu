@@ -1,21 +1,18 @@
 import { createClient } from '@/lib/supabase/server'
 import { notFound } from 'next/navigation'
 import ChannelSidebar from '@/components/community/ChannelSidebar'
-import HomeDashboard from '@/components/community/HomeDashboard'
-import type { Database } from '@/types/database'
+import ChannelFeed from '@/components/community/ChannelFeed'
 
-type Topic = Database['public']['Tables']['topics']['Row']
-
-export default async function CommunityHomePage({
+export default async function ChannelPage({
   params,
 }: {
-  params: Promise<{ slug: string }>
+  params: Promise<{ slug: string; channelId: string }>
 }) {
-  const { slug } = await params
+  const { slug, channelId } = await params
   const supabase = await createClient()
 
   const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return null
+  if (!user) return null // layout handles redirect
 
   const { data: community } = await supabase
     .from('communities')
@@ -34,13 +31,23 @@ export default async function CommunityHomePage({
 
   if (!membership) return null
 
-  // Member count
+  // Verify channel belongs to this community
+  const { data: channel } = await supabase
+    .from('channels')
+    .select('id, name')
+    .eq('id', channelId)
+    .eq('community_id', community.id)
+    .maybeSingle()
+
+  if (!channel) notFound()
+
+  // Member count for channel header
   const { count: memberCount } = await supabase
     .from('community_members')
     .select('*', { count: 'exact', head: true })
     .eq('community_id', community.id)
 
-  // Upcoming session within 7 days
+  // Upcoming session within 7 days for session banner
   let upcomingSlot: { start_time: string; title: string; type: string } | null = null
   const { data: stRows } = await supabase
     .from('session_types')
@@ -68,81 +75,22 @@ export default async function CommunityHomePage({
     }
   }
 
-  // Pinned topics
-  const { data: pinnedRows } = await supabase
-    .from('pinned_topics')
-    .select('topic_id')
-    .eq('community_id', community.id)
-
-  const pinnedTopicIds = (pinnedRows ?? []).map((r) => r.topic_id)
-
-  let pinnedTopics: Topic[] = []
-  if (pinnedTopicIds.length > 0) {
-    const { data } = await supabase
-      .from('topics')
-      .select('*')
-      .in('id', pinnedTopicIds)
-      .order('last_activity_at', { ascending: false })
-    pinnedTopics = data ?? []
-  }
-
-  // Recent activity: last 8 topics across all channels
-  const { data: recentTopics } = await supabase
-    .from('topics')
-    .select('*')
-    .eq('community_id', community.id)
-    .order('last_activity_at', { ascending: false })
-    .limit(8)
-
-  // Channel names for recent activity rows
-  const channelIds = [
-    ...new Set(
-      (recentTopics ?? []).map((t) => t.channel_id).filter(Boolean) as string[]
-    ),
-  ]
-  let channelNames: Record<string, string> = {}
-  if (channelIds.length > 0) {
-    const { data: chRows } = await supabase
-      .from('channels')
-      .select('id, name, icon_emoji')
-      .in('id', channelIds)
-    channelNames = Object.fromEntries(
-      (chRows ?? []).map((c) => [c.id, `${c.icon_emoji} ${c.name}`])
-    )
-  }
-
-  // Has user posted before?
-  const topicIdList = (recentTopics ?? []).map((t) => t.id)
-  let hasPosted = false
-  if (topicIdList.length > 0) {
-    const { count: postCount } = await supabase
-      .from('messages')
-      .select('id', { count: 'exact', head: true })
-      .eq('user_id', user.id)
-      .in('topic_id', topicIdList)
-    hasPosted = (postCount ?? 0) > 0
-  }
-
   return (
     <div className="flex h-full">
       <ChannelSidebar
         communityId={community.id}
         slug={slug}
-        activeChannelId={null}
+        activeChannelId={channelId}
         userRole={membership.role as 'admin' | 'member'}
       />
-      <HomeDashboard
+      <ChannelFeed
         community={community}
         userId={user.id}
         userRole={membership.role as 'admin' | 'member'}
         canPin={membership.can_pin}
+        channelId={channelId}
         memberCount={memberCount ?? 0}
         upcomingSlot={upcomingSlot}
-        pinnedTopics={pinnedTopics}
-        recentTopics={recentTopics ?? []}
-        channelNames={channelNames}
-        hasPosted={hasPosted}
-        slug={slug}
       />
     </div>
   )

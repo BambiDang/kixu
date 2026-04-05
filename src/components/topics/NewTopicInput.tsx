@@ -2,26 +2,28 @@
 
 import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
+import RichTextEditor from '@/components/editor/RichTextEditor'
 import type { Database } from '@/types/database'
 
 type Topic = Database['public']['Tables']['topics']['Row']
 
 interface Props {
   communityId: string
+  channelId?: string | null
   userId: string
+  isAnonymousEnabled?: boolean
   onCreated: (topic: Topic) => void
 }
 
-export default function NewTopicInput({ communityId, userId, onCreated }: Props) {
+export default function NewTopicInput({ communityId, channelId, userId, isAnonymousEnabled, onCreated }: Props) {
   const supabase = createClient()
-  const [text, setText] = useState('')
+  const [html, setHtml] = useState('')
   const [isAnonymous, setIsAnonymous] = useState(false)
   const [submitting, setSubmitting] = useState(false)
 
-  async function handleSubmit(e?: React.FormEvent) {
-    e?.preventDefault()
-    const content = text.trim()
-    if (!content || submitting) return
+  async function handleSubmit() {
+    const content = html.trim()
+    if (!content || content === '<p></p>' || submitting) return
 
     setSubmitting(true)
 
@@ -29,6 +31,7 @@ export default function NewTopicInput({ communityId, userId, onCreated }: Props)
       .from('topics')
       .insert({
         community_id: communityId,
+        channel_id: channelId ?? null,
         root_message: content,
         created_by: userId,
         is_anonymous_topic: isAnonymous,
@@ -41,7 +44,6 @@ export default function NewTopicInput({ communityId, userId, onCreated }: Props)
       return
     }
 
-    // Insert root message
     await supabase.from('messages').insert({
       topic_id: topic.id,
       user_id: userId,
@@ -49,47 +51,46 @@ export default function NewTopicInput({ communityId, userId, onCreated }: Props)
       is_anonymous: isAnonymous,
     })
 
-    setText('')
+    setHtml('')
     setIsAnonymous(false)
     setSubmitting(false)
     onCreated(topic)
   }
 
-  function handleKeyDown(e: React.KeyboardEvent) {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault()
-      handleSubmit()
-    }
-  }
+  const hasContent = html.trim() !== '' && html.trim() !== '<p></p>'
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-2">
-      <div className="flex items-start gap-2 border border-gray-200 rounded-lg bg-white p-3 focus-within:ring-2 focus-within:ring-blue-500">
-        <textarea
-          value={text}
-          onChange={(e) => setText(e.target.value)}
-          onKeyDown={handleKeyDown}
-          placeholder="Start a new conversation…"
-          rows={2}
-          className="flex-1 resize-none text-sm text-gray-800 placeholder-gray-400 focus:outline-none"
+    <div className="space-y-2">
+      <div className="relative">
+        <RichTextEditor
+          value={html}
+          onChange={setHtml}
+          onSubmit={handleSubmit}
+          placeholder="Start a new conversation… (Enter to post, Shift+Enter for newline)"
         />
+      </div>
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          {isAnonymousEnabled && (
+            <label className="flex items-center gap-1.5 text-xs text-gray-500 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={isAnonymous}
+                onChange={(e) => setIsAnonymous(e.target.checked)}
+                className="rounded"
+              />
+              Anonymous topic
+            </label>
+          )}
+        </div>
         <button
-          type="submit"
-          disabled={!text.trim() || submitting}
-          className="px-3 py-1.5 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors flex-shrink-0"
+          onClick={handleSubmit}
+          disabled={!hasContent || submitting}
+          className="px-4 py-1.5 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
         >
-          Post
+          {submitting ? 'Posting…' : 'Post'}
         </button>
       </div>
-      <label className="flex items-center gap-2 text-xs text-gray-500 cursor-pointer">
-        <input
-          type="checkbox"
-          checked={isAnonymous}
-          onChange={(e) => setIsAnonymous(e.target.checked)}
-          className="rounded"
-        />
-        Make this an anonymous topic
-      </label>
-    </form>
+    </div>
   )
 }

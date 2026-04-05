@@ -86,6 +86,25 @@ export async function POST(request: NextRequest) {
             }
           }
         }
+
+        // Course purchase — type flag in metadata
+        const { type, course_id } = session.metadata ?? {}
+        if (type === 'course_purchase' && course_id && user_id) {
+          const { data: existing } = await supabase
+            .from('course_enrollments')
+            .select('id')
+            .eq('stripe_checkout_session_id', session.id)
+            .maybeSingle()
+
+          if (!existing) {
+            await supabase.from('course_enrollments').insert({
+              course_id,
+              user_id,
+              stripe_checkout_session_id: session.id,
+              amount_paid: session.amount_total ?? 0,
+            })
+          }
+        }
         break
       }
 

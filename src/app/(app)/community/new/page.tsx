@@ -65,6 +65,12 @@ export default function NewCommunityPage() {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) { router.push('/login'); return }
 
+    // Ensure public.users row exists (may be missing if signed up before trigger was added)
+    await supabase.from('users').upsert(
+      { id: user.id, email: user.email ?? '' },
+      { onConflict: 'id', ignoreDuplicates: true }
+    )
+
     // Create community
     const { data: community, error: createError } = await supabase
       .from('communities')

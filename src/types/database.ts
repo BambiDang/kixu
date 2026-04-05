@@ -50,6 +50,7 @@ export interface Database {
           stripe_account_id?: string | null
           stripe_account_active?: boolean
         }
+        Relationships: []
       }
       communities: {
         Row: {
@@ -106,6 +107,7 @@ export interface Database {
           lp_creator_achievements?: string[] | null
           lp_testimonials?: Testimonial[] | null
         }
+        Relationships: []
       }
       community_members: {
         Row: {
@@ -126,6 +128,22 @@ export interface Database {
           role?: 'admin' | 'member'
           can_pin?: boolean
         }
+        Relationships: [
+          {
+            foreignKeyName: "community_members_community_id_fkey"
+            columns: ["community_id"]
+            isOneToOne: false
+            referencedRelation: "communities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "community_members_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          }
+        ]
       }
       memberships: {
         Row: {
@@ -152,11 +170,13 @@ export interface Database {
           status?: 'active' | 'cancelled' | 'past_due'
           current_period_end?: string | null
         }
+        Relationships: []
       }
       topics: {
         Row: {
           id: string
           community_id: string
+          channel_id: string | null
           root_message: string
           created_by: string
           is_anonymous_topic: boolean
@@ -166,6 +186,7 @@ export interface Database {
         Insert: {
           id?: string
           community_id: string
+          channel_id?: string | null
           root_message: string
           created_by: string
           is_anonymous_topic?: boolean
@@ -175,7 +196,60 @@ export interface Database {
         Update: {
           is_anonymous_topic?: boolean
           last_activity_at?: string
+          channel_id?: string | null
         }
+        Relationships: []
+      }
+      channel_sections: {
+        Row: {
+          id: string
+          community_id: string
+          name: string
+          position: number
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          community_id: string
+          name: string
+          position?: number
+          created_at?: string
+        }
+        Update: {
+          name?: string
+          position?: number
+        }
+        Relationships: []
+      }
+      channels: {
+        Row: {
+          id: string
+          community_id: string
+          section_id: string | null
+          name: string
+          description: string | null
+          icon_emoji: string
+          position: number
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          community_id: string
+          section_id?: string | null
+          name: string
+          description?: string | null
+          icon_emoji?: string
+          position?: number
+          created_at?: string
+        }
+        Update: {
+          section_id?: string | null
+          name?: string
+          description?: string | null
+          icon_emoji?: string
+          position?: number
+        }
+        Relationships: []
       }
       messages: {
         Row: {
@@ -196,7 +270,10 @@ export interface Database {
           reply_to_id?: string | null
           created_at?: string
         }
-        Update: never
+        Update: {
+          content?: string
+        }
+        Relationships: []
       }
       reactions: {
         Row: {
@@ -213,7 +290,10 @@ export interface Database {
           emoji: string
           created_at?: string
         }
-        Update: never
+        Update: {
+          emoji?: string
+        }
+        Relationships: []
       }
       pinned_topics: {
         Row: {
@@ -228,7 +308,10 @@ export interface Database {
           pinned_by: string
           pinned_at?: string
         }
-        Update: never
+        Update: {
+          pinned_at?: string
+        }
+        Relationships: []
       }
       topic_reads: {
         Row: {
@@ -244,6 +327,7 @@ export interface Database {
         Update: {
           last_read_at?: string
         }
+        Relationships: []
       }
       topic_anonymous_identities: {
         Row: {
@@ -258,7 +342,10 @@ export interface Database {
           pseudonym: string
           created_at?: string
         }
-        Update: never
+        Update: {
+          pseudonym?: string
+        }
+        Relationships: []
       }
       topic_follows: {
         Row: {
@@ -271,24 +358,37 @@ export interface Database {
           user_id: string
           created_at?: string
         }
-        Update: never
+        Update: {
+          created_at?: string
+        }
+        Relationships: []
       }
       cohort_alumni: {
         Row: {
           id: string
           community_id: string
-          user_id: string
-          label: string
-          awarded_at: string
+          name: string
+          cohort_name: string | null
+          achievement: string | null
+          linkedin_url: string | null
+          created_at: string
         }
         Insert: {
           id?: string
           community_id: string
-          user_id: string
-          label: string
-          awarded_at?: string
+          name: string
+          cohort_name?: string | null
+          achievement?: string | null
+          linkedin_url?: string | null
+          created_at?: string
         }
-        Update: never
+        Update: {
+          name?: string
+          cohort_name?: string | null
+          achievement?: string | null
+          linkedin_url?: string | null
+        }
+        Relationships: []
       }
       session_types: {
         Row: {
@@ -323,6 +423,15 @@ export interface Database {
           capacity?: number | null
           is_active?: boolean
         }
+        Relationships: [
+          {
+            foreignKeyName: "session_types_community_id_fkey"
+            columns: ["community_id"]
+            isOneToOne: false
+            referencedRelation: "communities"
+            referencedColumns: ["id"]
+          }
+        ]
       }
       slots: {
         Row: {
@@ -345,6 +454,15 @@ export interface Database {
           status?: 'available' | 'booked' | 'cancelled'
           booked_count?: number
         }
+        Relationships: [
+          {
+            foreignKeyName: "slots_session_type_id_fkey"
+            columns: ["session_type_id"]
+            isOneToOne: false
+            referencedRelation: "session_types"
+            referencedColumns: ["id"]
+          }
+        ]
       }
       bookings: {
         Row: {
@@ -372,7 +490,196 @@ export interface Database {
         Update: {
           status?: 'confirmed' | 'cancelled' | 'refunded'
         }
+        Relationships: []
       }
+      courses: {
+        Row: {
+          id: string
+          community_id: string
+          title: string
+          description: string | null
+          cover_image_url: string | null
+          price: number
+          stripe_price_id: string | null
+          position: number
+          is_published: boolean
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          community_id: string
+          title: string
+          description?: string | null
+          cover_image_url?: string | null
+          price?: number
+          stripe_price_id?: string | null
+          position?: number
+          is_published?: boolean
+          created_at?: string
+        }
+        Update: {
+          title?: string
+          description?: string | null
+          cover_image_url?: string | null
+          price?: number
+          stripe_price_id?: string | null
+          position?: number
+          is_published?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "courses_community_id_fkey"
+            columns: ["community_id"]
+            isOneToOne: false
+            referencedRelation: "communities"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      course_modules: {
+        Row: {
+          id: string
+          course_id: string
+          title: string
+          position: number
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          course_id: string
+          title: string
+          position?: number
+          created_at?: string
+        }
+        Update: {
+          title?: string
+          position?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "course_modules_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "courses"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      course_lessons: {
+        Row: {
+          id: string
+          module_id: string
+          title: string
+          content: string | null
+          video_url: string | null
+          position: number
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          module_id: string
+          title: string
+          content?: string | null
+          video_url?: string | null
+          position?: number
+          created_at?: string
+        }
+        Update: {
+          title?: string
+          content?: string | null
+          video_url?: string | null
+          position?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "course_lessons_module_id_fkey"
+            columns: ["module_id"]
+            isOneToOne: false
+            referencedRelation: "course_modules"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      course_downloads: {
+        Row: {
+          id: string
+          course_id: string
+          title: string
+          url: string
+          file_type: string | null
+          position: number
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          course_id: string
+          title: string
+          url: string
+          file_type?: string | null
+          position?: number
+          created_at?: string
+        }
+        Update: {
+          title?: string
+          url?: string
+          file_type?: string | null
+          position?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "course_downloads_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "courses"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      course_enrollments: {
+        Row: {
+          id: string
+          course_id: string
+          user_id: string
+          stripe_checkout_session_id: string | null
+          amount_paid: number
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          course_id: string
+          user_id: string
+          stripe_checkout_session_id?: string | null
+          amount_paid?: number
+          created_at?: string
+        }
+        Update: {
+          amount_paid?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "course_enrollments_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "courses"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+    }
+    Views: {
+      [_ in never]: never
+    }
+    Functions: {
+      is_community_member: {
+        Args: { cid: string }
+        Returns: boolean
+      }
+    }
+    Enums: {
+      [_ in never]: never
+    }
+    CompositeTypes: {
+      [_ in never]: never
     }
   }
 }
